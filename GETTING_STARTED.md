@@ -394,6 +394,59 @@ az storage container create --name $CONTAINER --account-name $SA --auth-mode log
 > ⚠️ `--auth-mode login` でエラーになる場合は、自分のアカウントにストレージアカウントの
 > 「ストレージ BLOB データ共同作成者」ロールを付与してください。
 
+### 作成後：タグを付ける
+
+State 用リソースも、タグ規則に沿ってタグを付けます。Terraform 管理ではないため、`ManagedBy` は `AzureCLI` にします。
+タグはリソースごとに付ける必要があります（Resource Group に付けても、中のリソースには引き継がれません）。
+
+```powershell
+az group update --name $RG --tags Project=AzureCommonPlatform Environment=dev Owner=Taiyaki64 ManagedBy=AzureCLI
+az storage account update --name $SA --resource-group $RG --tags Project=AzureCommonPlatform Environment=dev Owner=Taiyaki64 ManagedBy=AzureCLI
+```
+
+> 💡 `--tags` は既存のタグを置き換えます。付いたかは `az group show --name $RG --query tags` で確認できます。
+
+> 📝 作成した Storage Account 名（`$SA`）は Step8 の backend 設定で使います。控えておいてください。
+> 忘れた場合は `az storage account list --resource-group $RG --output table` で確認できます。
+
+### トラブルシュート：`SubscriptionNotFound` が出る
+
+**症状**：`az storage account check-name --name $SA` を実行すると、サブスクリプションは `Enabled` なのに次のエラーになる。
+
+```text
+(SubscriptionNotFound) Subscription xxxxxxxx-xxxx-... was not found.
+```
+
+**原因**：Resource Provider `Microsoft.Storage` が、このサブスクリプションで未登録だった。
+`check-name` のような確認系のコマンドは、作成時のような自動登録が働かないため、実際の原因とは違う分かりにくいエラーになる。
+
+> 💡 **Resource Provider とは**：Azure の各サービス（Storage / VM / ネットワークなど）の提供窓口です。
+> 新しいサブスクリプションでは、使いたいサービスの Provider を先に「登録」する必要があります。登録に費用はかかりません。
+
+**切り分けの手順**（すべて確認系で、何も変更しない）
+
+| 順番 | コマンド | 分かること |
+| --- | --- | --- |
+| 1 | `az --version` | Azure CLI が使えるか。`az` が見つからない場合は **VSCode を完全に再起動**する（インストール前に起動した VSCode は古い PATH を使い続けるため） |
+| 2 | `az account list --all --output table` | サブスクリプションが `Enabled` か、`IsDefault` が `True` か |
+| 3 | `az group list --output table` | サブスクリプションに問い合わせできるか（空の表なら正常） |
+| 4 | `az provider show --namespace Microsoft.Storage --query registrationState --output tsv` | `NotRegistered` なら未登録が原因 |
+
+**対処**：Provider を登録する（Azure の設定変更なので、実行前に内容を確認する）。
+
+```powershell
+az provider register --namespace Microsoft.Storage
+
+# Registered になるまで待つ（1〜数分。Registering → Registered と変わる）
+az provider show --namespace Microsoft.Storage --query registrationState --output tsv
+```
+
+登録後に `az storage account check-name --name $SA` を打ち直し、`"nameAvailable": true` と出れば解決です。
+
+> ⚠️ 今回の切り分けでは、`az logout` → `az login` のやり直しや、ポータルでの支払い方法の確認も行いましたが、原因ではありませんでした。
+> 同じエラーが出たら、まず上の表の 4 番（Provider の登録状態）を確認すると早いです。
+> Step8 以降でも、`Microsoft.Network`（VNet・NSG）や `Microsoft.Compute`（VM）で同様のエラーが出た場合は、同じ方法で登録します。
+
 ---
 
 ## Step8：Phase1 の最初のリソースを Terraform で構築する
