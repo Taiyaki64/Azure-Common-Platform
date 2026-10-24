@@ -88,7 +88,7 @@
 | --- | --- |
 | `Project` | `AzureCommonPlatform` |
 | `Environment` | `dev` / `test` / `prod` |
-| `Owner` | 利用者の名前 |
+| `Owner` | `Taiyaki64` |
 | `ManagedBy` | `Terraform` |
 
 ## アドレス設計
