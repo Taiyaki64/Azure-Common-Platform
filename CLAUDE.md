@@ -9,8 +9,8 @@
 
 - Azure 上に Hub and Spoke 構成の共通基盤を Terraform で構築する**個人の学習・ポートフォリオ用プロジェクト**
 - 目的：Azure（AZ-104 / AZ-305）・Terraform・GitHub Actions・IaC・ネットワーク設計・運用設計のスキル向上
-- 全体像は `README.md`、作業手順は `GETTING_STARTED.md` を参照する
-- 作業は `GETTING_STARTED.md` の Step 順に進める。どの Step の作業かを意識し、手順書と実装がずれたら手順書も更新する
+- 全体像は `README.md`、作業手順は `GETTING_STARTED.md`（目次）と Phase ごとの `GETTING_STARTED_Phase<N>.md` を参照する
+- 作業は `GETTING_STARTED_Phase<N>.md` の Step 順に進める。どの Step の作業かを意識し、手順書と実装がずれたら手順書も更新する
 
 ## 回答ルール
 
@@ -172,4 +172,4 @@ modules/<name>/       # 再利用するモジュール
 > 作業が進んだらこの欄を更新する。
 
 - 現在のフェーズ：Phase1（準備中）
-- 次にやること：`GETTING_STARTED.md` の Step0 から開始
+- 次にやること：`GETTING_STARTED_Phase0.md` の Step0 から開始
