@@ -1,0 +1,154 @@
+<mxfile host="app.diagrams.net" version="24.0.0">
+  <diagram id="acp-architecture" name="Hub and Spoke 全体構成">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="title" value="Azure Common Platform - Hub and Spoke 構成図" style="text;html=1;fontSize=20;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="30" y="0" width="700" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- ===== 外部 ===== -->
+        <mxCell id="gha" value="GitHub Actions&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;(Phase5: plan / apply)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#24292f;fontColor=#ffffff;strokeColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="30" y="90" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="tf" value="Terraform&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;environments/dev, test&lt;br&gt;modules/*&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7B42BC;fontColor=#ffffff;strokeColor=#5a2f8c;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="30" y="200" width="150" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="home" value="自宅 PC&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;自宅 IP (/32)&lt;br&gt;SSH 鍵認証&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="30" y="560" width="150" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- ===== Azure ===== -->
+        <mxCell id="azure" value="Microsoft Azure Subscription  /  Japan East (jpe)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f7ff;strokeColor=#0078D4;strokeWidth=2;verticalAlign=top;align=left;spacingLeft=10;fontStyle=1;fontSize=13;fontColor=#0078D4;arcSize=2;" vertex="1" parent="1">
+          <mxGeometry x="210" y="40" width="1160" height="820" as="geometry" />
+        </mxCell>
+
+        <!-- tfstate -->
+        <mxCell id="rgstate" value="rg-acp-tfstate-jpe-001&lt;br&gt;(Terraform 管理外)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#888888;dashed=1;verticalAlign=top;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="240" y="90" width="200" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="ststate" value="Storage Account&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;tfstate 保存 (backend)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="260" y="145" width="160" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Hub -->
+        <mxCell id="hub" value="Hub-VNet  vnet-acp-hub-jpe-001  (10.0.0.0/16)&lt;br&gt;共通サービス" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;verticalAlign=top;fontStyle=1;fontSize=12;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="500" y="90" width="820" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="log" value="Log Analytics&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;log-acp-hub-jpe-001&lt;br&gt;(Phase4 監視)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="530" y="155" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="kv" value="Key Vault&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;kv-acp-hub-jpe-001&lt;br&gt;(Phase2 シークレット管理)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="780" y="155" width="240" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="dns" value="Private DNS Zone&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;privatelink.*.core.windows.net&lt;br&gt;(Phase3 名前解決)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="155" width="240" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Dev -->
+        <mxCell id="dev" value="Dev-VNet  vnet-acp-dev-jpe-001  (10.1.0.0/16)&lt;br&gt;rg-acp-dev-jpe-001" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;verticalAlign=top;fontStyle=1;fontSize=12;arcSize=3;" vertex="1" parent="1">
+          <mxGeometry x="240" y="420" width="560" height="400" as="geometry" />
+        </mxCell>
+        <mxCell id="devsnet" value="snet-acp-dev-app-001 (10.1.1.0/24)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;verticalAlign=top;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="260" y="480" width="270" height="320" as="geometry" />
+        </mxCell>
+        <mxCell id="devnsg" value="NSG  nsg-acp-dev-app-001&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;許可: 自宅IP/32 → TCP 22 のみ&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="275" y="515" width="240" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="devvm" value="Linux VM  vm-acp-dev-001&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Ubuntu / Standard_B1s&lt;br&gt;OS Disk: Standard_LRS&lt;br&gt;SSH 鍵認証のみ&lt;br&gt;自動停止 23:00 (JST)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="275" y="595" width="240" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="devnic" value="NIC nic-acp-dev-001 / Public IP pip-acp-dev-001" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="275" y="720" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="devpe" value="Private Endpoint 用 (10.1.2.0/24)&lt;br&gt;予約" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;dashed=1;verticalAlign=top;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="550" y="480" width="230" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="devst" value="Storage Account / Azure Files&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;stacpdevjpe001 (Phase2)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="560" y="650" width="210" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Test -->
+        <mxCell id="test" value="Test-VNet  vnet-acp-test-jpe-001  (10.2.0.0/16)&lt;br&gt;rg-acp-test-jpe-001" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=2;verticalAlign=top;fontStyle=1;fontSize=12;arcSize=3;" vertex="1" parent="1">
+          <mxGeometry x="840" y="420" width="290" height="400" as="geometry" />
+        </mxCell>
+        <mxCell id="testsnet" value="snet-acp-test-app-001 (10.2.1.0/24)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;verticalAlign=top;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="860" y="480" width="250" height="320" as="geometry" />
+        </mxCell>
+        <mxCell id="testnsg" value="NSG  nsg-acp-test-app-001&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;自宅IP/32 → TCP 22 のみ&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="875" y="515" width="220" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="testvm" value="Linux VM  vm-acp-test-001&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Ubuntu / Standard_B1s&lt;br&gt;SSH 鍵認証のみ&lt;br&gt;自動停止 23:00 (JST)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="875" y="595" width="220" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="testnic" value="NIC nic-acp-test-001 / Public IP pip-acp-test-001" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="875" y="710" width="220" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Prod -->
+        <mxCell id="prod" value="Prod-VNet&lt;br&gt;(10.3.0.0/16)&lt;br&gt;&lt;br&gt;本番環境&lt;br&gt;(予約・未構築)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;dashed=1;fontColor=#666666;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="420" width="170" height="400" as="geometry" />
+        </mxCell>
+
+        <!-- ===== 接続 ===== -->
+        <mxCell id="e1" value="push / PR" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="gha" target="tf">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="State 保存" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;strokeColor=#7B42BC;" edge="1" parent="1" source="tf" target="rgstate">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="200" y="235" /><mxPoint x="200" y="165" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" value="SSH (22)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;strokeColor=#b85450;strokeWidth=2;" edge="1" parent="1" source="home" target="devnsg">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="205" y="595" /><mxPoint x="205" y="543" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3b" value="SSH (22)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;strokeColor=#b85450;strokeWidth=2;dashed=1;" edge="1" parent="1" source="home" target="testnsg">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="205" y="595" /><mxPoint x="205" y="860" /><mxPoint x="820" y="860" /><mxPoint x="820" y="543" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4" value="NSG 適用" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;dashed=1;fontSize=9;" edge="1" parent="1" source="devnsg" target="devvm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="NSG 適用" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;dashed=1;fontSize=9;" edge="1" parent="1" source="testnsg" target="testvm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="peer1" value="VNet Peering" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;strokeWidth=3;strokeColor=#0078D4;fontSize=11;fontStyle=1;labelBackgroundColor=#f0f7ff;" edge="1" parent="1" source="hub" target="dev">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points"><mxPoint x="600" y="290" /><mxPoint x="600" y="355" /><mxPoint x="520" y="355" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="peer2" value="VNet Peering" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;strokeWidth=3;strokeColor=#0078D4;fontSize=11;fontStyle=1;labelBackgroundColor=#f0f7ff;" edge="1" parent="1" source="hub" target="test">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="985" y="290" /><mxPoint x="985" y="420" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="peer3" value="将来 Peering" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;endArrow=block;strokeWidth=2;strokeColor=#999999;dashed=1;fontSize=10;fontColor=#666666;labelBackgroundColor=#f0f7ff;" edge="1" parent="1" source="hub" target="prod">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1255" y="290" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="mi" value="Managed Identity で取得" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;strokeColor=#d6b656;strokeWidth=2;fontSize=10;exitX=0.5;exitY=0;entryX=0.25;entryY=1;labelBackgroundColor=#f0f7ff;" edge="1" parent="1" source="devvm" target="kv">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="395" y="400" /><mxPoint x="840" y="400" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="diag" value="診断ログ / メトリクス" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;strokeColor=#999999;fontSize=10;exitX=0.25;exitY=0;entryX=0.25;entryY=1;labelBackgroundColor=#f0f7ff;" edge="1" parent="1" source="dev" target="log">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="380" y="380" /><mxPoint x="585" y="380" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ===== 凡例 ===== -->
+        <mxCell id="legend" value="&lt;b&gt;凡例・補足&lt;/b&gt;&lt;br&gt;━ 青太線: VNet Peering (Hub ⇔ Spoke)&lt;br&gt;━ 赤線: SSH 22 (自宅IP /32 のみ許可)&lt;br&gt;┄ 点線: 予約・将来 / 参照・ログ送信&lt;br&gt;全リソースにタグ: Project / Environment / Owner / ManagedBy&lt;br&gt;構築順: Phase1 基本 → 2 共通サービス → 3 Hub&amp;amp;Spoke → 4 監視 → 5 CI/CD" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;fillColor=#ffffff;strokeColor=#999999;fontSize=11;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="30" y="680" width="150" height="170" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
