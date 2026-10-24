@@ -511,6 +511,92 @@ subscription_id = "<サブスクリプションID>"
 
 > 💡 `terraform.tfvars.example` に値を伏せたサンプルを作り、そちらをコミットします。
 
+### コードの解説
+
+#### `main.tf` の3つのブロック
+
+| ブロック | 役割 |
+| --- | --- |
+| `terraform` | 使う Terraform / Provider のバージョン、State の保存先（backend）を宣言する |
+| `provider` | どの Azure（サブスクリプション）に接続するかを指定する |
+| `resource` | 実際に作るリソースを宣言する |
+
+- `required_version = ">= 1.9.0"`：Terraform 本体が 1.9.0 以上であることを要求する
+- `version = "~> 4.0"`：azurerm Provider は 4.x の最新を使う（5.0 以上にはならない）。実際に使った版は `.terraform.lock.hcl` に記録され、コミットする
+- State：Terraform が「何を作ったか」を記録する台帳。ローカルに置くと PC 故障で失うため、Step7 の Storage に保存する
+- `use_azuread_auth = true`：アクセスキーを使わず `az login` の権限で Storage に接続する（キー漏えいの心配がない）
+- `key`：State のファイル名。環境ごとに分ける（`dev.terraform.tfstate` など）
+- backend ブロックには**変数が使えない**ため、ストレージアカウント名は直接書く
+- `features {}`：azurerm で必須の空ブロック。省略するとエラーになる
+- `resource "azurerm_resource_group" "main"`：`main` は Terraform 内だけで使うローカル名。Azure 上の名前は `name` で決まる。他から参照するときは `azurerm_resource_group.main.name` と書く
+
+#### `variables.tf` と `terraform.tfvars` の関係
+
+`main.tf` は他のファイルを「呼び出して」いません。Terraform は**同じフォルダの `.tf` ファイルをすべてまとめて1つの設定として読む**ため、ファイルを分けるのは人間の整理のためです。`terraform.tfvars` は、この名前のファイルがあれば自動で値が読み込まれます。
+
+| ファイル | 役割 | 例 | GitHub |
+| --- | --- | --- | --- |
+| `variables.tf` | 変数の宣言（受け取り口＝空の箱） | `variable "subscription_id" { ... }` | 上げる |
+| `terraform.tfvars` | 変数に入れる実際の値 | `subscription_id = "..."` | **上げない** |
+| `main.tf` | 変数の中身を使う | `var.subscription_id` | 上げる |
+
+つなぎ役は**名前の一致**です。3か所の `subscription_id` が同じ名前だからつながります（違うとエラー）。
+
+`terraform plan` 実行時の流れ：
+
+1. `.tf` ファイルをすべて読み、`variables.tf` で「`subscription_id` という変数がある」と知る
+2. `terraform.tfvars` から同じ名前の変数に値を入れる
+3. `main.tf` の `var.subscription_id` が、入った値に置き換わる
+
+- `var.` は variable の略で「変数を使う」という合図
+- `tfvars` に値がない変数は、`plan` のときに入力を求められる
+- コード（設計図）は公開し、秘密の値（ID・自宅 IP）は手元に置くために分けている
+
+#### タグは `locals.tf` で共通化する（上のコード例からの変更点）
+
+上の `main.tf` の `tags` はタグを直接書いていますが、リソースが増えるたびに同じ4行をコピーすることになります。そのため、本プロジェクトでは `locals.tf` に1回だけ定義し、各リソースは `local.common_tags` で呼び出します。
+
+```hcl
+# locals.tf
+locals {
+  common_tags = {
+    Project     = "AzureCommonPlatform"
+    Environment = "dev"
+    Owner       = "Taiyaki64"
+    ManagedBy   = "Terraform"
+  }
+}
+```
+
+```hcl
+# main.tf の Resource Group
+resource "azurerm_resource_group" "main" {
+  name     = "rg-acp-dev-jpe-001"
+  location = "japaneast"
+  tags     = local.common_tags
+}
+```
+
+- `Owner` は `<自分の名前>` のままにせず `Taiyaki64` にする
+- タグを変えたいときは `locals.tf` の1か所だけ直せば全リソースに反映される
+- `variable` は「外から値をもらう箱」、`locals` は「内側で名前を付けた値」
+
+### 作成するファイル一覧
+
+`environments/dev/` に、次の5ファイルを作ってから実行します。
+
+| ファイル | 内容 | コミット |
+| --- | --- | --- |
+| `main.tf` | terraform / backend / provider / Resource Group（`tags = local.common_tags`） | する |
+| `variables.tf` | `subscription_id` 変数の宣言 | する |
+| `locals.tf` | 共通タグ `common_tags`（上記の解説を参照） | する |
+| `terraform.tfvars` | サブスクリプション ID の実値 | **しない** |
+| `terraform.tfvars.example` | 値を伏せたサンプル（`subscription_id = "00000000-0000-0000-0000-000000000000"`） | する |
+
+- サブスクリプション ID は `az account show --query id -o tsv` で確認できる（読み取りだけのコマンド）
+- `terraform.tfvars` は `terraform.tfvars.example` をコピーして作り、値を書き換える
+- 作業は `main` ではなく、ブランチ `feature/phase1-rg` を作ってから行う（`git checkout -b feature/phase1-rg`）
+
 ### 実行
 
 ```powershell
@@ -523,6 +609,45 @@ terraform apply      # 構築（yes を入力）
 ```
 
 Azure Portal で Resource Group とタグが作成されていることを確認できたら成功です 🎉
+
+### トラブルシュート：`terraform init` で `403 AuthorizationPermissionMismatch` が出る
+
+```text
+Error: Failed to get existing workspaces: listing blobs: executing request: unexpected status 403
+(403 This request is not authorized to perform this operation using this permission.)
+with AuthorizationPermissionMismatch
+```
+
+**原因**：State 保存用 Storage の**中身（Blob）を読み書きする権限**がないためです。プロバイダー未登録（`SubscriptionNotFound`）とは別の問題です。
+
+Azure の権限は2種類に分かれています。
+
+| 種類 | 対象 | 必要なロール |
+| --- | --- | --- |
+| 管理プレーン | Storage 自体の作成・削除 | 所有者 / 共同作成者 |
+| データプレーン | Storage 内の Blob の読み書き | **ストレージ BLOB データ共同作成者** |
+
+所有者でも、データプレーンのロールは自動では付きません。backend は `use_azuread_auth = true`（アクセスキーを使わず自分のログインで接続）なので、このロールが必須です。
+
+**確認方法**（読み取りだけ）：Portal で Storage Account →「アクセス制御 (IAM)」→「ロールの割り当て」に「ストレージ BLOB データ共同作成者」があるかを見る。
+
+**対処**：Azure CLI でロールを付与する（Azure を変更する操作なので、内容を確認してから実行）。
+
+```powershell
+$RG    = "rg-acp-tfstate-jpe-001"
+$SA    = az storage account list --resource-group $RG --query "[0].name" -o tsv
+$SCOPE = az storage account show --name $SA --resource-group $RG --query id -o tsv
+$ME    = az ad signed-in-user show --query id -o tsv
+
+az role assignment create --assignee $ME --role "Storage Blob Data Contributor" --scope $SCOPE
+
+# 付与されたかの確認
+az role assignment list --assignee $ME --scope $SCOPE --output table
+```
+
+- 付与の範囲は State 用 Storage Account **1つだけ**にする（最小権限の考え方。サブスクリプション全体には付けない）
+- ロールの付与は無料。反映に数分かかることがあるため、すぐ失敗したら少し待って `terraform init` をやり直す
+- State 用リソースは Terraform 管理外なので、Portal ではなく CLI で付与する
 
 ---
 
