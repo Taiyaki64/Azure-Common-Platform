@@ -24,7 +24,6 @@ provider "azurerm" {
 
 resource "azurerm_resource_group" "main" {
   name     = "rg-acp-dev-jpe-001"
-  location = "japaneast"
-
+  location = var.location
   tags = local.common_tags
 }
