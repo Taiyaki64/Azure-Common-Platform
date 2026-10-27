@@ -12,3 +12,8 @@ output "ssh_command" {
   description = "VM への SSH 接続コマンド"
   value       = "ssh -i ~/.ssh/acp_dev_rsa ${var.admin_username}@${module.vm.public_ip}"
 }
+
+output "storage_account_name" {
+  description = "Storage Account 名"
+  value       = module.storage.name
+}

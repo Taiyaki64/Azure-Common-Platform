@@ -17,3 +17,9 @@ variable "address_prefixes" {
   description = "Subnet のアドレス範囲（例: [\"10.1.1.0/24\"]）"
   type        = list(string)
 }
+
+variable "service_endpoints" {
+  description = "Subnet に設定する Service Endpoint のリスト（例: [\"Microsoft.Storage\"]）"
+  type        = list(string)
+  default     = []
+}
