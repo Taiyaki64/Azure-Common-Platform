@@ -44,7 +44,25 @@ module "subnet_app" {
   resource_group_name  = module.rg.name
   virtual_network_name = module.vnet.name
   address_prefixes     = ["10.1.1.0/24"]
+  service_endpoints    = ["Microsoft.Storage", "Microsoft.KeyVault"] # 追加
 }
+
+# （module "nsg_app" / module "vm" は変更なし）
+
+module "storage" {
+  source              = "../../modules/storage"
+  name                = "stacpdevjpe001"
+  location            = module.rg.location
+  resource_group_name = module.rg.name
+  tags                = local.common_tags
+
+  # 自宅 IP（Terraform を実行する PC）と app Subnet（VM）のみ許可。
+  # ip_rules には /32 を付けられないため取り除く
+  allowed_ip_addresses = [trimsuffix(var.allowed_ssh_source_ip, "/32")]
+  allowed_subnet_ids   = [module.subnet_app.id]
+  container_names      = ["app-data"]
+}
+
 
 module "nsg_app" {
   source              = "../../modules/nsg"
