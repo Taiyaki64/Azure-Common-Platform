@@ -17,3 +17,13 @@ output "storage_account_name" {
   description = "Storage Account 名"
   value       = module.storage.name
 }
+
+output "key_vault_name" {
+  description = "Key Vault 名"
+  value       = module.keyvault.name
+}
+
+output "key_vault_uri" {
+  description = "Key Vault の URI"
+  value       = module.keyvault.vault_uri
+}
