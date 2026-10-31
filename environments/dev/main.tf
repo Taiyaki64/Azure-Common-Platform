@@ -8,6 +8,9 @@ terraform {
     }
   }
 
+
+
+
   backend "azurerm" {
     resource_group_name  = "rg-acp-tfstate-jpe-001"
     storage_account_name = "stacptfstate55814"
@@ -17,8 +20,17 @@ terraform {
   }
 }
 
+# 現在 Terraform を実行しているユーザーの情報（ロール割り当てで使う）
+data "azurerm_client_config" "current" {}
+
 provider "azurerm" {
-  features {}
+  features {
+    key_vault {
+      # destroy 時に論理削除（ソフトデリート）状態の Key Vault も完全削除する。
+      # これがないと、同じ名前で再作成できず（名前が 7 日間予約される）、学習中の再構築で詰まる
+      purge_soft_delete_on_destroy = true
+    }
+  }
   subscription_id = var.subscription_id
 }
 
@@ -96,4 +108,15 @@ module "vm" {
   ssh_public_key      = file(pathexpand(var.ssh_public_key_path))
   auto_shutdown_time  = var.auto_shutdown_time
   tags                = local.common_tags
+}
+
+module "keyvault" {
+  source              = "../../modules/keyvault"
+  name                = "kv-acp-dev-jpe-001"
+  location            = module.rg.location
+  resource_group_name = module.rg.name
+  tags                = local.common_tags
+
+  allowed_ip_addresses = [trimsuffix(var.allowed_ssh_source_ip, "/32")]
+  allowed_subnet_ids   = [module.subnet_app.id]
 }
