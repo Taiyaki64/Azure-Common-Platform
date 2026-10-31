@@ -27,3 +27,8 @@ output "key_vault_uri" {
   description = "Key Vault の URI"
   value       = module.keyvault.vault_uri
 }
+
+output "managed_identity_client_id" {
+  description = "Managed Identity のクライアント ID（VM 内でのトークン取得に使う）"
+  value       = module.managed_identity.client_id
+}

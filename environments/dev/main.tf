@@ -108,6 +108,16 @@ module "vm" {
   ssh_public_key      = file(pathexpand(var.ssh_public_key_path))
   auto_shutdown_time  = var.auto_shutdown_time
   tags                = local.common_tags
+
+  user_assigned_identity_ids = [module.managed_identity.id]
+}
+
+module "managed_identity" {
+  source              = "../../modules/managed_identity"
+  name                = "id-acp-dev-jpe-001"
+  location            = module.rg.location
+  resource_group_name = module.rg.name
+  tags                = local.common_tags
 }
 
 module "keyvault" {

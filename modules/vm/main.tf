@@ -56,6 +56,16 @@ resource "azurerm_linux_virtual_machine" "this" {
     sku       = "server"
     version   = "latest"
   }
+
+  # Managed Identity を割り当てる（リストが空のときは identity ブロックを作らない）
+  dynamic "identity" {
+    for_each = length(var.user_assigned_identity_ids) > 0 ? [1] : []
+
+    content {
+      type         = "UserAssigned"
+      identity_ids = var.user_assigned_identity_ids
+    }
+  }
 }
 
 # 毎日 23:00（日本時間）に自動停止（割り当て解除）してコストを抑える
