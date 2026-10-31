@@ -53,6 +53,12 @@ variable "auto_shutdown_time" {
   default     = "2300"
 }
 
+variable "user_assigned_identity_ids" {
+  description = "VM に割り当てる User-assigned Managed Identity の ID のリスト"
+  type        = list(string)
+  default     = []
+}
+
 variable "tags" {
   description = "リソースに付けるタグ"
   type        = map(string)
