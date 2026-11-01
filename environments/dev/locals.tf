@@ -7,3 +7,12 @@ locals {
     ManagedBy   = "Terraform"
   }
 }
+
+locals {
+  # Hub に作成済みの Private DNS Zone（Step27-2 の locals と同じ名前）
+  private_dns_zones = {
+    blob  = "privatelink.blob.core.windows.net"
+    vault = "privatelink.vaultcore.azure.net"
+  }
+}
+

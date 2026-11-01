@@ -171,5 +171,7 @@ modules/<name>/       # 再利用するモジュール
 
 > 作業が進んだらこの欄を更新する。
 
-- 現在のフェーズ：Phase1（準備中）
-- 次にやること：`GETTING_STARTED_Phase0.md` の Step0 から開始
+- 現在のフェーズ：Phase3（Hub and Spoke / Private Endpoint）
+- 完了済み：Phase2 まで完了、Phase3 は Step26 まで実施済み（Hub・Test 環境・VNet Peering）
+- 次にやること：`GETTING_STARTED_Phase3.md` の **Step27（Private DNS Zone を作成し、各 VNet にリンクする）** から開始
+- 備考：Subnet のアドレス設計は `ProjectOverAll/01_Architecture/ip-address-design.md` に反映済み（2026-11-01）。`GETTING_STARTED_Phase3.md` の Step25・26 のチェックボックスが未更新の可能性あり
