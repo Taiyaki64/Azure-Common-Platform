@@ -130,3 +130,40 @@ module "keyvault" {
   allowed_ip_addresses = [trimsuffix(var.allowed_ssh_source_ip, "/32")]
   allowed_subnet_ids   = [module.subnet_app.id]
 }
+
+module "subnet_pe" {
+  source               = "../../modules/subnet"
+  name                 = "snet-acp-dev-pe-001"
+  resource_group_name  = module.rg.name
+  virtual_network_name = module.vnet.name
+  address_prefixes     = ["10.1.2.0/24"]
+}
+
+module "pep_blob" {
+  source              = "../../modules/private_endpoint"
+  name                = "pep-acp-dev-blob-001"
+  location            = module.rg.location
+  resource_group_name = module.rg.name
+  subnet_id           = module.subnet_pe.id
+  target_resource_id  = module.storage.id
+  subresource_name    = "blob"
+  private_dns_zone_id = data.azurerm_private_dns_zone.this["blob"].id
+  tags                = local.common_tags
+
+  # DNS のリンクが先にできていないと、名前解決が切り替わらない
+  depends_on = [azurerm_private_dns_zone_virtual_network_link.dev]
+}
+
+module "pep_kv" {
+  source              = "../../modules/private_endpoint"
+  name                = "pep-acp-dev-kv-001"
+  location            = module.rg.location
+  resource_group_name = module.rg.name
+  subnet_id           = module.subnet_pe.id
+  target_resource_id  = module.keyvault.id
+  subresource_name    = "vault"
+  private_dns_zone_id = data.azurerm_private_dns_zone.this["vault"].id
+  tags                = local.common_tags
+
+  depends_on = [azurerm_private_dns_zone_virtual_network_link.dev]
+}

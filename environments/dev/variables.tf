@@ -37,3 +37,15 @@ variable "auto_shutdown_time" {
   type        = string
   default     = "2300"
 }
+
+variable "hub_resource_group_name" {
+  description = "Hub の Resource Group 名"
+  type        = string
+  default     = "rg-acp-hub-jpe-001"
+}
+
+variable "hub_vnet_name" {
+  description = "Hub-VNet 名"
+  type        = string
+  default     = "vnet-acp-hub-jpe-001"
+}

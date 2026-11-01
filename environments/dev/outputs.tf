@@ -32,3 +32,11 @@ output "managed_identity_client_id" {
   description = "Managed Identity のクライアント ID（VM 内でのトークン取得に使う）"
   value       = module.managed_identity.client_id
 }
+
+output "private_endpoint_ips" {
+  description = "Private Endpoint のプライベート IP（動作確認で名前解決の結果と比較する）"
+  value = {
+    blob  = module.pep_blob.private_ip_address
+    vault = module.pep_kv.private_ip_address
+  }
+}

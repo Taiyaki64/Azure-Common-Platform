@@ -12,9 +12,12 @@ Phase3 で Hub and Spoke（VNet Peering）を行う際、**アドレス空間が
 | Test-VNet | 10.2.0.0/16 | テスト環境 | Phase3 |
 | Prod-VNet | 10.3.0.0/16 | 本番環境（予約） | 未定 |
 
-## Subnet（Dev-VNet 内）
+## Subnet
 
-| Subnet | アドレス | 用途 |
-| --- | --- | --- |
-| snet-acp-dev-app-001 | 10.1.1.0/24 | VM 配置用 |
-| （予約） | 10.1.2.0/24 | Private Endpoint 用（Phase2 以降） |
+| VNet | Subnet | アドレス | 用途 | 作成する Phase |
+| --- | --- | --- | --- | --- |
+| Hub-VNet (10.0.0.0/16) | snet-acp-hub-shared-001 | 10.0.1.0/24 | 共通サービス（予約・空） | Phase3 |
+| Dev-VNet (10.1.0.0/16) | snet-acp-dev-app-001 | 10.1.1.0/24 | VM 配置用 | Phase1 |
+| Dev-VNet (10.1.0.0/16) | snet-acp-dev-pe-001 | 10.1.2.0/24 | Private Endpoint | Phase3 |
+| Test-VNet (10.2.0.0/16) | snet-acp-test-app-001 | 10.2.1.0/24 | アプリ（VM 用） | Phase3 |
+| Test-VNet (10.2.0.0/16) | （予約） | 10.2.2.0/24 | Private Endpoint 用 | 将来 |
