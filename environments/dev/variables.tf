@@ -49,3 +49,14 @@ variable "hub_vnet_name" {
   type        = string
   default     = "vnet-acp-hub-jpe-001"
 }
+
+variable "hub_log_analytics_name" {
+  description = "Hub の Log Analytics ワークスペース名"
+  type        = string
+  default     = "log-acp-hub-jpe-001"
+}
+
+variable "alert_email" {
+  description = "アラートの通知先メールアドレス"
+  type        = string
+}

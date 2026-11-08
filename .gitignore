@@ -1,4 +1,4 @@
-# Terraform
+CLAUDE.mdaform
 .terraform/
 *.tfstate
 *.tfstate.*
@@ -11,6 +11,7 @@ override.tf.json
 *_override.tf.json
 .terraformrc
 terraform.rc
+CLAUDE.md
 
 # 変数ファイル（サンプルのみ管理する）
 *.tfvars

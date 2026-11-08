@@ -19,7 +19,13 @@ terraform {
 }
 
 provider "azurerm" {
-  features {}
+  features {
+    log_analytics_workspace {
+      # destroy 時にワークスペースを完全削除する。
+      # これがないと、論理削除（14 日間）の間は同じ名前で再作成できず、学習中の再構築で詰まる
+      permanently_delete_on_destroy = true
+    }
+  }
   subscription_id = var.subscription_id
 }
 
@@ -60,5 +66,15 @@ module "private_dns" {
   linked_vnet_ids = {
     hub = module.vnet.id
   }
+}
+
+module "log_analytics" {
+  source              = "../../modules/log_analytics"
+  name                = "log-acp-hub-jpe-001"
+  location            = module.rg.location
+  resource_group_name = module.rg.name
+  retention_in_days   = 30
+  daily_quota_gb      = 0.5
+  tags                = local.common_tags
 }
 
