@@ -103,15 +103,14 @@ Azure-Common-Platform
 
 ## 構築フェーズ
 
-| Phase | テーマ | 内容 | 状況 |
+| Phase | テーマ | 内容 |
 | --- | --- | --- | --- |
-| Phase1 | 基本インフラ | Resource Group / VNet / Subnet / NSG / Linux VM | ⬜ 未着手 |
-| Phase2 | 共通サービス | Storage Account / Key Vault / Managed Identity | ⬜ 未着手 |
-| Phase3 | ネットワーク設計 | Hub and Spoke / VNet Peering / Private DNS | ⬜ 未着手 |
-| Phase4 | 監視 | Log Analytics / Azure Monitor | ⬜ 未着手 |
-| Phase5 | CI/CD | GitHub Actions / Terraform Plan / Terraform Apply | ⬜ 未着手 |
+| Phase1 | 基本インフラ | Resource Group / VNet / Subnet / NSG / Linux VM |
+| Phase2 | 共通サービス | Storage Account / Key Vault / Managed Identity |
+| Phase3 | ネットワーク設計 | Hub and Spoke / VNet Peering / Private DNS |
+| Phase4 | 監視 | Log Analytics / Azure Monitor |
+| Phase5 | CI/CD | GitHub Actions / Terraform Plan / Terraform Apply |
 
-> 状況欄は ⬜ 未着手 / 🔄 対応中 / ✅ 完了 で更新します。
 
 ---
 
@@ -137,7 +136,6 @@ Azure-Common-Platform
 | 上限 | 10,000円以内 |
 
 - 不要時は仮想マシンを停止し、コストを削減します。
-- コストの実績・分析は `ProjectOverAll/04_CostManagement/` に記録します。
 
 ---
 
@@ -150,17 +148,6 @@ Azure-Common-Platform
 - AKS
 - Azure Functions
 - Azure Front Door
-
----
-
-## 学習ログ
-
-実施内容や学習メモは以下に整理します。
-
-```text
-ProjectOverAll/
-└─ 02_Lecture/
-```
 
 ---
 
