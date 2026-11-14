@@ -1,0 +1,45 @@
+name: terraform-apply
+
+on:
+  push:
+    branches: [main]
+    # 関係のない変更（ドキュメントだけ）の merge で、承認を求めないようにする
+    paths:
+      - "environments/hub/**"
+      - "environments/test/**"
+      - "modules/**"
+      - ".github/workflows/terraform-apply*.yml"
+  # Actions 画面の「Run workflow」ボタンから手動でも実行できる
+  workflow_dispatch:
+    inputs:
+      allow_destroy:
+        description: "削除・作り直しを含む plan も apply する（内容を確認した場合のみ true）"
+        type: boolean
+        default: false
+
+# 呼び出す側にも権限の指定が必要（呼ばれる側はこの範囲でしか使えない）
+permissions:
+  id-token: write
+  contents: read
+
+# apply は同時に 2 つ走らせない。実行中のものは中止せず、順番に待たせる
+concurrency:
+  group: terraform-apply
+  cancel-in-progress: false
+
+jobs:
+  hub:
+    uses: ./.github/workflows/terraform-apply-env.yml
+    with:
+      env: hub
+      allow_destroy: ${{ inputs.allow_destroy || false }}
+    secrets: inherit
+
+  # test は Hub の VNet を参照して Peering を作る。そのため、hub が先（適用順は hub → test）
+  test:
+    needs: hub
+    uses: ./.github/workflows/terraform-apply-env.yml
+    with:
+      env: test
+      allow_destroy: ${{ inputs.allow_destroy || false }}
+    secrets: inherit

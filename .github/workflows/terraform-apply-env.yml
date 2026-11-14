@@ -1,0 +1,60 @@
+name: terraform-apply-env
+
+on:
+  workflow_call:
+    inputs:
+      env:
+        description: "apply する環境（hub / test）"
+        type: string
+        required: true
+      allow_destroy:
+        description: "削除・作り直しを含む plan も apply する"
+        type: boolean
+        default: false
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  apply:
+    name: apply (${{ inputs.env }})
+    runs-on: ubuntu-latest
+    # この指定で、Environment の承認ルールが働く。OIDC の subject は「environment:<名前>」になる
+    environment: ${{ inputs.env }}
+    defaults:
+      run:
+        working-directory: environments/${{ inputs.env }}
+    env:
+      ARM_USE_OIDC: "true"
+      ARM_CLIENT_ID: ${{ secrets.AZURE_APPLY_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.6"
+          terraform_wrapper: false
+
+      - name: init
+        run: terraform init -input=false
+
+      - name: plan
+        run: terraform plan -input=false -lock-timeout=60s -out=tfplan
+
+      - name: 削除・作り直しのチェック
+        run: |
+          terraform show -json tfplan > plan.json
+          del=$(jq '[.resource_changes[]? | select(.change.actions | index("delete"))] | length' plan.json)
+          echo "削除または作り直し：${del} 件"
+          if [ "$del" -gt 0 ] && [ "${{ inputs.allow_destroy }}" != "true" ]; then
+            echo "::error::plan に削除または作り直し（${del} 件）が含まれるため、apply を中止しました。内容を確認し、手動実行（allow_destroy）で明示的に許可してください"
+            terraform show -no-color tfplan
+            exit 1
+          fi
+
+      - name: apply
+        run: terraform apply -input=false tfplan
