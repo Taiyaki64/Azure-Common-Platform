@@ -233,12 +233,75 @@ the current package for registry.terraform.io/hashicorp/azurerm doesn't match an
 
 Windows と Linux の両方のハッシュを記録します。
 
+#### この Step でやることの要約
+
+- やること：`terraform providers lock` を hub / test / dev の 3 環境で 1 回ずつ実行し、ロックファイルに Linux 用のハッシュを**書き足す**
+- 変わるもの：`.terraform.lock.hcl` の `hashes = [ ... ]` の行が増えるだけ（Azure には何も影響しない。課金もなし）
+- 変わらないもの：Provider のバージョン（`version = "4.x.x"` の行）は変わらない
+
+#### 手順
+
+**① リポジトリの一番上のフォルダに移動する**
+
+下の手順は、リポジトリのルート（`README.md` があるフォルダ）で実行する前提です。`environments/dev` にいる場合は戻ってください。
+
+```powershell
+cd C:\Users\tfsdt\GitHub\Azure-Common-Platform
+```
+
+**② 変更前の状態を確認する（任意）**
+
+```powershell
+git status                                  # 作業中の変更を把握しておく
+Select-String -Path environments/dev/.terraform.lock.hcl -Pattern '"h1:|"zh:' | Measure-Object
+# → 行数（Count）を覚えておく。実行後に増えていれば成功
+```
+
+**③ 3 環境分のハッシュを追加する**
+
 ```powershell
 foreach ($e in "hub","test","dev") {
   terraform -chdir="environments/$e" providers lock "-platform=windows_amd64" "-platform=linux_amd64"
 }
-git status    # 3 つの .terraform.lock.hcl に差分が出ていればよい
 ```
+
+- 各環境で `Success! Terraform has updated the lock file.` と表示されれば成功です（3 回出ます）
+- Provider を Terraform Registry からダウンロードして照合するため、1 環境あたり数十秒かかります。インターネット接続が必要です
+- `terraform init` 済みでなくても実行できます
+
+**④ 結果を確認する**
+
+```powershell
+git status
+git diff --stat
+```
+
+- `environments/hub/.terraform.lock.hcl` / `environments/test/.terraform.lock.hcl` / `environments/dev/.terraform.lock.hcl` の 3 つが `modified` になっていればOK
+- `git diff environments/dev/.terraform.lock.hcl` を見て、`+` の行（`"h1:..."` や `"zh:..."`）が追加されるだけで、`version` の行に変更がないことを確認する
+
+**⑤ 手元の動作に影響がないことを確認する（dev）**
+
+```powershell
+cd environments/dev
+terraform init
+terraform validate
+cd ../..
+```
+
+- エラーなく通ればOK。Windows 用のハッシュも残っているので、手元の `init` は今まで通り動きます
+
+**⑥ コミットは Step38 の他の変更とまとめて行う**
+
+この時点ではコミットしません（ブランチ作成後に、Step38 全体の区切りでまとめます）。`.terraform.lock.hcl` は**コミットする**ファイルです。
+
+#### うまくいかないとき
+
+| 症状 | 原因と対処 |
+| --- | --- |
+| `Error: Failed to query available provider packages` | ネットワークに接続できていない。接続を確認して再実行する |
+| `terraform: The term 'terraform' is not recognized` | Terraform が PATH にない。新しい PowerShell を開き直す |
+| 差分が 1 つも出ない | すでに Linux 用のハッシュが入っている（実行済み）。問題なし |
+| `-platform=...` で `Too many command line arguments` | 引用符を付け忘れている。`"-platform=linux_amd64"` のように囲む |
 
 > 💡 引用符で `-platform=...` を囲むのは、PowerShell が `.` や `=` で引数を分割してしまうためです（`-target` と同じ）。
 > Mac を使うことがあれば、`darwin_arm64` なども追加します。
@@ -604,15 +667,115 @@ PR を作成すると、「Checks」に `fmt`・`plan (hub)`・`plan (test)`・`
 
 ### 4. ブランチ保護を設定する（`plan` が成功しない限りマージできないようにする）
 
-`plan` が一度でも実行された後でないと、チェック名を選べません。**初回の実行が終わってから**設定します。
+#### これは何をするものか
 
-GitHub の「Settings → Branches → Add branch ruleset（または Add rule）」で、`main` に次を設定します。
+`main` に「入るための条件」を GitHub に覚えさせる設定です。CLAUDE.md の「`main` は動作確認済みのコードのみ」を、人間の注意力ではなく**仕組みで守らせます**。
 
-- [ ] Require a pull request before merging（直接 push を禁止）
-- [ ] Require status checks to pass：`fmt`、`plan (hub)`、`plan (test)`、`plan (dev)` を追加
+| 設定 | 守ってくれること |
+| --- | --- |
+| Require a pull request before merging | `main` への直接 push を禁止する（必ず PR を通る） |
+| Require status checks to pass | `fmt` と `plan` が成功しない PR は、マージのボタンが押せない |
+| Restrict deletions / Block force pushes | `main` の削除と、履歴の書き換え（`push --force`）を禁止する |
 
-> ⚠️ プライベートリポジトリ ＋ GitHub Free プランでは、ブランチ保護が使えません。その場合は「`main` へ直接 push しない」を自分で守る運用にします（CLAUDE.md の Git ルールどおり）。
-> ⚠️ 自分も管理者としてルールを回避できる設定がありますが、**チェックを飛ばすために使わないでください。**
+> 💡 GitHub では、この設定を **Ruleset（ルールセット）** と呼びます。以前の「Branch protection rule」の新しい形式で、画面の入口が違うだけで、できることはほぼ同じです。
+
+#### 前提の確認
+
+- [ ] リポジトリが **Public**、または有料プランである（Public なら Free で使えます。`gh repo view --json visibility` で確認できます）
+- [ ] PR で `fmt` / `plan (...)` のチェックが**一度は実行された**（実行履歴がないと、チェック名を検索しても出てきません）
+- [ ] リポジトリの管理者（Owner）のアカウントで GitHub にログインしている
+
+> ⚠️ **チェックが失敗したままでも、チェック名は選べます。** ただし、設定後は失敗している PR をマージできなくなります。**先に OIDC のエラー（Step41-3）を直してから**設定すると、PR #12 を無理なく進められます。
+
+#### 手順
+
+**① ルールセットの作成画面を開く**
+
+1. GitHub のリポジトリ（`Taiyaki64/Azure-Common-Platform`）を開く
+2. 上部のタブ **Settings** をクリック（Settings が見えない場合は、管理者権限がありません）
+3. 左メニューの **Rules** → **Rulesets** をクリック
+4. 右上の **New ruleset** → **New branch ruleset** をクリック
+
+**② 基本情報を入力する**
+
+| 項目 | 設定する値 |
+| --- | --- |
+| Ruleset Name | `protect-main` |
+| Enforcement status | **Active**（`Disabled` のままだと何も起きません） |
+| Bypass list | **空のまま**（誰も例外にしない。下の注意を参照） |
+
+**③ 対象のブランチを指定する**
+
+1. 「Target branches」の **Add target** をクリック
+2. **Include default branch** を選ぶ（`main` が対象になります）
+3. 一覧に `Default` と表示されれば OK
+
+**④ ルールを選ぶ**（「Branch rules」の一覧でチェックを付ける）
+
+| チェックを付ける | 付けない（既定のまま） |
+| --- | --- |
+| ✅ **Restrict deletions** | ☐ Require linear history |
+| ✅ **Block force pushes** | ☐ Require signed commits |
+| ✅ **Require a pull request before merging** | ☐ Require deployments to succeed |
+| ✅ **Require status checks to pass** | |
+
+「Require a pull request before merging」を付けると、詳細設定が開きます。
+
+| 項目 | 値 | 理由 |
+| --- | --- | --- |
+| Required approvals | **0** | 自分一人の開発では、自分の PR を自分で承認できないため。1 以上にすると、自分でマージできなくなる |
+| 他のチェック（Dismiss stale approvals など） | 付けない | 承認者がいないので意味がない |
+
+「Require status checks to pass」を付けると、詳細設定が開きます。
+
+1. **Add checks** をクリックし、検索欄に名前を入れて、次の 4 つを 1 つずつ追加する
+
+   - [ ] `fmt`
+   - [ ] `plan (hub)`
+   - [ ] `plan (test)`
+   - [ ] `plan (dev)`
+
+2. 追加すると、右側に GitHub Actions のアイコンが付く（チェックの提供元が「GitHub Actions」であることの確認）
+3. **Require branches to be up to date before merging** は、**付けない**（付けると、他の PR が先にマージされるたびに、ブランチの更新と再実行が必要になり、一人開発では手間が増えるだけ）
+
+> 💡 **チェック名が検索に出てこない場合**：直近 7 日以内に実行されたものしか候補に出ません。PR の「Checks」に表示されている名前（`plan (hub)` のように、**空白とカッコも含めて**）と一致しているかも確認してください。
+
+**⑤ 保存する**
+
+画面の一番下の **Create** をクリックします。
+
+**⑥ 設定を確認する**
+
+画面で確認：
+
+- [ ] Rulesets の一覧に `protect-main` が **Active** で表示される
+- [ ] PR の画面を開くと、チェックが失敗している間は、マージのボタンが押せず「Merging is blocked」と表示される
+
+コマンドで確認（読み取りのみ）：
+
+```powershell
+gh api repos/Taiyaki64/Azure-Common-Platform/rulesets --jq '.[] | {name, enforcement}'
+```
+
+`"name":"protect-main","enforcement":"active"` が出れば OK です。
+
+**⑦ 動作確認（任意）**
+
+`main` に直接 push が拒否されることを確かめられます。ただし、`main` を汚さないよう、**何も変更していない状態**で試してください。
+
+```powershell
+git switch main
+git push origin main      # 変更がなければ "Everything up-to-date" と出るだけで、確認にはなりません
+```
+
+実際に拒否されるかを見るには、PR を経由しない小さなコミットを作る必要があり、手間の割に得られるものが少ないため、**画面の「Merging is blocked」の確認だけで十分**です。
+
+#### 注意
+
+- ⚠️ **Bypass list は空のままにしてください。** 自分（管理者）を例外にすると、「チェックを飛ばしてマージする」ことが可能になり、設定の意味がなくなります。
+- ⚠️ Step42 以降で `terraform-apply.yml` を追加すると、**マージ直後に apply が起動します。** このルールは、その前に有効にしておくのが安全です。
+- 🔧 **ルールを間違えて、PR がマージできなくなったら**：Settings → Rules → Rulesets → `protect-main` を開き、**Enforcement status を `Disabled`** に切り替えて修正し、再度 `Active` にします（ルール自体の編集は管理者ならいつでもできます）。
+- 🔧 ワークフローのジョブ名を後から変えたとき（例：`plan` → `terraform-plan`）は、ルールセット側のチェック名も更新が必要です。名前が合わないと、**永久に「Expected — Waiting for status to be reported」のまま**マージできなくなります。
 
 ---
 
