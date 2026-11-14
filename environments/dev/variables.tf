@@ -60,3 +60,9 @@ variable "alert_email" {
   description = "アラートの通知先メールアドレス"
   type        = string
 }
+
+variable "ssh_public_key" {
+  description = "VM に登録する SSH 公開鍵の内容。CI など鍵ファイルが無い環境で指定する。未指定なら ssh_public_key_path のファイルを読む"
+  type        = string
+  default     = null
+}

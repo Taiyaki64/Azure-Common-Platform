@@ -16,3 +16,10 @@ locals {
   }
 }
 
+locals {
+  # 変数で渡されていればそれを、無ければ手元の鍵ファイルを使う。
+  # 末尾の改行の有無で差分が出ないよう、前後の空白は取り除く
+  ssh_public_key = trimspace(
+    var.ssh_public_key != null ? var.ssh_public_key : file(pathexpand(var.ssh_public_key_path))
+  )
+}

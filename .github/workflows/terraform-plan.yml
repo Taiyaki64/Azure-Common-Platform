@@ -1,0 +1,93 @@
+name: terraform-plan
+
+on:
+  pull_request:
+    branches: [main]
+    # paths で絞らない：必須チェックにする場合、絞ると「実行されない＝永遠に待ち」になるため
+
+# id-token: write は OIDC のトークンを発行してもらうために必要。リポジトリの中身は読むだけ
+permissions:
+  id-token: write
+  contents: read
+
+# 同じブランチで続けて push したら、古い実行は中止する
+concurrency:
+  group: terraform-plan-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fmt:
+    name: fmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.6" # 手元の `terraform version` と同じ版にする
+          terraform_wrapper: false
+      - run: terraform fmt -check -recursive -diff
+
+  plan:
+    name: plan (${{ matrix.env }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # 1 つの環境が失敗しても、他の環境の結果は見る
+      matrix:
+        include:
+          - env: hub
+            refresh: "true"
+          - env: test
+            refresh: "true"
+          # dev は Key Vault / Storage のファイアウォールに阻まれるため、リフレッシュしない（Step37 参照）
+          - env: dev
+            refresh: "false"
+    defaults:
+      run:
+        working-directory: environments/${{ matrix.env }}
+    env:
+      # Terraform の azurerm backend / provider を OIDC で認証する設定
+      ARM_USE_OIDC: "true"
+      ARM_CLIENT_ID: ${{ secrets.AZURE_PLAN_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      # terraform.tfvars の代わり（宣言されていない変数への TF_VAR_* は無視されるので、hub / test でも問題ない）
+      TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_allowed_ssh_source_ip: ${{ secrets.ALLOWED_SSH_SOURCE_IP }}
+      TF_VAR_alert_email: ${{ secrets.ALERT_EMAIL }}
+      TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.6"
+          terraform_wrapper: false # 出力をそのまま扱うため、ラッパーは使わない
+
+      - name: init
+        run: terraform init -input=false
+
+      - name: validate
+        run: terraform validate
+
+      - name: plan
+        run: terraform plan -input=false -lock-timeout=60s -refresh=${{ matrix.refresh }} -out=tfplan
+
+      - name: 結果を画面に要約する
+        run: |
+          # plan.json には機密値が含まれるため、ログに出さず・保存（artifact）もしない
+          terraform show -json tfplan > plan.json
+          add=$(jq '[.resource_changes[]? | select(.change.actions == ["create"])] | length' plan.json)
+          chg=$(jq '[.resource_changes[]? | select(.change.actions == ["update"])] | length' plan.json)
+          del=$(jq '[.resource_changes[]? | select(.change.actions | index("delete"))] | length' plan.json)
+          {
+            echo "### ${{ matrix.env }}：追加 ${add} / 変更 ${chg} / 削除（作り直しを含む） ${del}"
+            if [ "${{ matrix.refresh }}" = "false" ]; then
+              echo "> ℹ️ このplanはリフレッシュなし（実際のリソースとのずれは検知しません）"
+            fi
+            if [ "$del" -gt 0 ]; then
+              echo "> ⚠️ **削除または作り直しを含みます。内容を必ず確認してください**"
+            fi
+            echo '```'
+            terraform show -no-color tfplan
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
