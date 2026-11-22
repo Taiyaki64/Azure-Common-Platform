@@ -15,3 +15,11 @@ Azure Common Platform を進めるための手順書の目次です。手順は 
 flowchart LR
     P0["Phase0 準備編<br>Step0〜9"] --> P1["Phase1 基本インフラ<br>Step10〜16"] --> P2["Phase2 共通サービス<br>Step17〜23"] --> P3["Phase3 ネットワーク設計<br>Step24〜30"] --> P4["Phase4 監視<br>Step31〜36"] --> P5["Phase5 CI/CD<br>Step37〜43"]
 ```
+
+## 追加レクチャー
+
+Phase の進行とは別に、特定のテーマを深掘りする手順書です。Step 番号は Phase と区別するため `StepA<N>` としています。
+
+| テーマ | 手順書 | Step | 前提 | 内容 |
+| --- | --- | --- | --- | --- |
+| 監視・アラート | [GETTING_STARTED_Extra_Alerting.md](GETTING_STARTED_Extra_Alerting.md) | StepA1 〜 StepA8 | Phase4・Phase5 完了 | Activity Log / Resource Health / メトリック / ログを収集し、アラートルール → Action Group → メール通知まで作る（SRE エージェント連携は含まない） |
