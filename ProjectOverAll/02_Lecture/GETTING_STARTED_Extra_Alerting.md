@@ -496,7 +496,7 @@ resource "azurerm_monitor_activity_log_alert" "service_health" {
 | `status = "Succeeded"` | 同じ操作で、開始・成功の 2 件が記録されるため、成功だけを対象にして、通知の重複を防ぐ |
 | `service_health` | Service Health 専用の条件。サービスやリージョンを絞れる |
 
-> 💡 **このアラートは、CI の apply にも反応します。** たとえば dev の `terraform apply` で `azurerm_role_assignment` が作られると、ロール割り当てのアラートが届きます。「正しい操作でも通知が来る」のは、このタイプのアラートの特徴です。**自分の予定した操作なのか、そうでないのかを、通知を見て判断する**運用になります。通知が多すぎる場合の対処は、StepA7 で学びます。
+> 💡 **このアラートが反応するのは、「ロール割り当てが実際に書き込まれたとき」だけです。** CI の `plan` や、差分の無い `apply`、ロール割り当てを持たない hub / test の `apply` では、鳴りません。鳴るのは、たとえば手元の dev の `terraform apply` で `azurerm_role_assignment` が**作成**されたとき（作り直しの場合も、作成の操作で鳴る）や、`az` / Portal で手動で付けたときです。「正しい操作でも通知が来る」のは、このタイプのアラートの特徴です。**自分の予定した操作なのか、そうでないのかを、通知を見て判断する**運用になります。通知が多すぎる場合の対処は、StepA7 で学びます。
 
 ```powershell
 cd environments/hub
