@@ -8,3 +8,8 @@ variable "location" {
   type        = string
   default     = "japaneast"
 }
+
+variable "alert_email" {
+  description = "アラートの通知先メールアドレス"
+  type        = string
+}
