@@ -171,11 +171,10 @@ modules/<name>/       # 再利用するモジュール
 
 > 作業が進んだらこの欄を更新する。
 
-- 現在のフェーズ：Phase5（CI/CD）の着手前（2026-11-08 時点）
-- 完了済み：Phase4 まで実施済み（Hub・Test・Dev、Private Endpoint、Log Analytics、CPU アラートの動作確認まで）
-- 次にやること：`GETTING_STARTED_Phase5.md` の **Step37（設計を理解し、作業ブランチ `feature/phase5-cicd` を作成する）** から開始
+- 現在のフェーズ：全レクチャー完了（2026-11-23 時点）
+- 完了済み：Phase1〜Phase5（CI/CD：OIDC 認証・plan 自動化・承認付き apply）と、追加レクチャー「監視・アラート」（`GETTING_STARTED_Extra_Alerting.md`、StepA1〜A8）
+- 次にやること：未定。SRE エージェント連携（追加レクチャーで意図的に見送った範囲）が候補
 - 備考：
-  - 手順書・構成図（`ProjectOverAll/01_Architecture/architecture-phase1〜4・final.drawio`）は作成済みだが、未コミット。Phase4 の Step36（記録・README 更新・PR）が未実施の可能性があるため、Phase5 の前に確認する
-  - `README.md` の「構築フェーズ」の状況欄が未更新（Phase1〜4 は完了済みの想定）
+  - 権限の一覧は `ProjectOverAll/01_Architecture/access-control-design.md` を参照
   - 自宅 IP が変わると Key Vault / Storage が 403 になる。`terraform.tfvars`（dev / test）の `allowed_ssh_source_ip` を更新し、`terraform apply "-target=module.keyvault" "-target=module.storage"` を先に実行する（PowerShell では `-target` を引用符で囲む）
   - Phase5 では、dev は plan のみ CI 化（`-refresh=false`）、apply は自宅 PC のまま。理由は Step37 を参照

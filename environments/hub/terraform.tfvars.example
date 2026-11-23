@@ -1,3 +1,6 @@
 # このファイルをコピーして terraform.tfvars を作り、値を書き換えて使う
 # terraform.tfvars は GitHub に上げない（.gitignore で除外済みか確認すること）
 subscription_id = "00000000-0000-0000-0000-000000000000"
+
+# terraform.tfvars.example
+alert_email = "your-name@example.com"
