@@ -146,7 +146,8 @@ Azure-Common-Platform
 | Phase2 | 共通サービス | Storage Account / Key Vault / Managed Identity | ✅ |
 | Phase3 | ネットワーク設計 | Hub and Spoke / VNet Peering / Private DNS / Private Endpoint | ✅ |
 | Phase4 | 監視 | Log Analytics / Azure Monitor / アラート | ✅ |
-| Phase5 | CI/CD | GitHub Actions / OIDC 認証 / Terraform Plan / 承認付き Apply | 🔄 |
+| Phase5 | CI/CD | GitHub Actions / OIDC 認証 / Terraform Plan / 承認付き Apply | ✅ |
+| 追加レクチャー | 監視・アラート | Activity Log / Resource Health / メトリック・ログ → アラートルール → Action Group → メール通知 | ✅ |
 
 ---
 
