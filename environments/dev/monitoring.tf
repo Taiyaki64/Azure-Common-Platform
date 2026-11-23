@@ -105,8 +105,8 @@ resource "azurerm_monitor_scheduled_query_rules_alert_v2" "vm_memory" {
   tags                = local.common_tags
 
   scopes               = [data.azurerm_log_analytics_workspace.hub.id] # クエリを実行する対象（ワークスペース）
-  evaluation_frequency = "P1D"                                       # 1日ごとに実行（頻度を上げると料金が上がる）
-  window_duration      = "P1D"                                       # 直近 1日のデータを対象にする
+  evaluation_frequency = "P1D"                                         # 1日ごとに実行（頻度を上げると料金が上がる）
+  window_duration      = "P1D"                                         # 直近 1日のデータを対象にする
 
   criteria {
     # 「しきい値を超えた行だけ」を返す。行が 1 行以上あれば発火する
